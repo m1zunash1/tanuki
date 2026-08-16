@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+const ctx={globalThis:{}};vm.runInNewContext(fs.readFileSync(new URL('./search-core.js',import.meta.url),'utf8'),ctx);
+const C=ctx.globalThis.TanukiCore;
+const words=new Set(['むかんしん','おおむかし','いんちょうしつ','けいけんち']);
+let r=C.search({a:'お',b:'ん',min:7,max:7,mode:'sequence',words});
+if(!r.results.some(x=>x.candidate==='おおむかんしん')) throw new Error('example 1 failed');
+r=C.search({a:'け',b:'ょうしつ',min:9,max:9,mode:'sequence',words});
+if(!r.results.some(x=>x.candidate==='けいけんちょうしつ')) throw new Error('example 2 failed');
+console.log('tanuki search tests passed');

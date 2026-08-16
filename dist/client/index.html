@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#173f35" />
+  <title>交代たぬきツール</title>
+  <meta name="description" content="2つの文字列を交代で消すと、それぞれ別の辞書語になる文字列を探します。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand-mark" aria-hidden="true"><span>た</span></div>
+      <div>
+        <p class="eyebrow">WORD FINDER</p>
+        <h1>交代たぬきツール</h1>
+        <p class="lead">ふたつの「抜き方」が、ふたつの言葉を連れてくる。</p>
+      </div>
+    </header>
+
+    <section class="search-card" aria-labelledby="search-title">
+      <div class="section-heading">
+        <div><span class="step">01</span><h2 id="search-title">消す文字を決める</h2></div>
+        <button id="swapButton" class="quiet-button" type="button" aria-label="入力1と入力2を入れ替える">⇄ 入れ替え</button>
+      </div>
+
+      <div class="input-pair">
+        <label class="word-input input-one">
+          <span><b>1</b> 先に消す文字列</span>
+          <input id="remove1" value="お" inputmode="text" autocomplete="off" spellcheck="false" maxlength="12" />
+        </label>
+        <div class="versus" aria-hidden="true">×</div>
+        <label class="word-input input-two">
+          <span><b>2</b> もう一方の文字列</span>
+          <input id="remove2" value="ん" inputmode="text" autocomplete="off" spellcheck="false" maxlength="12" />
+        </label>
+      </div>
+
+      <div class="options-grid">
+        <fieldset class="mode-picker">
+          <legend>消し方</legend>
+          <label><input type="radio" name="mode" value="sequence" checked /><span><b>文字列ごと</b><small>入力した並びをまとめて消す</small></span></label>
+          <label><input type="radio" name="mode" value="individual" /><span><b>個別消去</b><small>構成するひらがなを1文字ずつ消す</small></span></label>
+        </fieldset>
+
+        <div class="length-picker">
+          <span class="option-label">Wの文字数</span>
+          <div class="range-line">
+            <label><span class="sr-only">最小文字数</span><input id="minLength" type="number" min="2" max="24" value="7" /></label>
+            <span>〜</span>
+            <label><span class="sr-only">最大文字数</span><input id="maxLength" type="number" min="2" max="24" value="12" /></label>
+            <span>文字</span>
+          </div>
+        </div>
+      </div>
+
+      <details class="dictionary-options">
+        <summary>辞書を選ぶ</summary>
+        <div>
+          <label><input type="checkbox" name="dictionary" value="kobuta" checked /> 仔豚辞書</label>
+          <label><input type="checkbox" name="dictionary" value="general" checked /> 一般語辞書</label>
+          <label><input type="checkbox" name="dictionary" value="item" checked /> イラスト辞書</label>
+        </div>
+      </details>
+
+      <div id="error" class="error" role="alert"></div>
+      <button id="searchButton" class="search-button" type="button"><span>候補を探す</span><i aria-hidden="true">→</i></button>
+      <div class="examples" aria-label="入力例">
+        <span>試してみる</span>
+        <button type="button" data-a="お" data-b="ん" data-min="7" data-max="7">お × ん</button>
+        <button type="button" data-a="け" data-b="ょうしつ" data-min="9" data-max="9">け × ょうしつ</button>
+      </div>
+    </section>
+
+    <section class="results-section" aria-labelledby="results-title">
+      <div class="section-heading results-heading">
+        <div><span class="step">02</span><h2 id="results-title">見つかった組み合わせ</h2></div>
+        <span id="summary" class="summary">まだ検索していません</span>
+      </div>
+      <div id="results" class="results" aria-live="polite">
+        <div class="empty-state"><span>狸</span><p>条件を入れて「候補を探す」を押してください。</p></div>
+      </div>
+      <button id="moreButton" class="more-button" type="button" hidden>さらに表示</button>
+    </section>
+
+    <footer><span>交代たぬきツール</span><span>辞書に眠る、ことばの仕掛け。</span></footer>
+  </main>
+  <script src="dict-data.js"></script>
+  <script src="search-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
