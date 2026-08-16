@@ -36,9 +36,7 @@
           <div><input id="lengthMin" type="number" min="1" placeholder="自由" aria-label="文字列の最小の長さ" /><i>〜</i><input id="lengthMax" type="number" min="1" placeholder="自由" aria-label="文字列の最大の長さ" /></div>
         </div>
         <label class="check-field setting-box"><input id="omitRepeats" type="checkbox" /><span>繰り返し語を省く</span></label>
-        <button id="searchButton" class="search" type="button">検索</button>
       </div>
-      <div id="error" class="error-box" role="alert"></div>
     </section>
 
     <section class="panel">
@@ -51,6 +49,8 @@
           <label><input type="checkbox" name="dictionary" value="item" checked /> イラスト辞書</label>
         </div></div></div>
       </fieldset>
+      <div class="search-row"><button id="searchButton" class="search" type="button">検索</button></div>
+      <div id="error" class="error-box" role="alert"></div>
     </section>
 
     <section class="panel">
