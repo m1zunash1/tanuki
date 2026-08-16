@@ -43,6 +43,8 @@
     if(!Array.isArray(config.inputs)||config.inputs.length<2||config.inputs.length>4) throw new Error('消す文字列は2〜4個にしてください。');
     const inputs=config.inputs.map((raw,index)=>{ const token=mode==='individual'?normalizeIndividual(raw.token):normalize(raw.token); const min=Number(raw.min),max=Number(raw.max); if(!token||!HIRAGANA.test(token)) throw new Error(`文字列${index+1}には、ひらがなを入力してください。`); if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max>6||min>max) throw new Error(`文字列${index+1}の含有数は1〜6で指定してください。`); return {token,min,max,index}; });
     if(new Set(inputs.map(x=>x.token)).size!==inputs.length) throw new Error('同じ消去文字列は複数指定できません。');
+    const lengthMin=config.lengthMin===''||config.lengthMin==null?null:Number(config.lengthMin); const lengthMax=config.lengthMax===''||config.lengthMax==null?null:Number(config.lengthMax);
+    if((lengthMin!==null&&(!Number.isInteger(lengthMin)||lengthMin<1))||(lengthMax!==null&&(!Number.isInteger(lengthMax)||lengthMax<1))||(lengthMin!==null&&lengthMax!==null&&lengthMin>lengthMax)) throw new Error('文字列の長さを正しく指定してください。');
     const words=new Set(); for(const word of config.words){ const w=mode==='individual'?normalizeIndividual(word):normalize(word); if(HIRAGANA.test(w)) words.add(w); }
     const remove=mode==='sequence'?deleteSequence:deleteIndividual; const count=mode==='sequence'?sequenceCount:individualCount;
     const source=[...inputs].sort((a,b)=>estimate(a,words.size,mode)-estimate(b,words.size,mode))[0];
@@ -51,7 +53,8 @@
     for(let k=source.min;k<=source.max&&budget.used<budget.max;k+=1){
       const parts=generatedParts(source,k,mode);
       for(const base of bases){
-        if(chars(base).length+insertSize(source,k,mode)>24) continue;
+        const candidateLength=chars(base).length+insertSize(source,k,mode);
+        if((lengthMin!==null&&candidateLength<lengthMin)||(lengthMax!==null&&candidateLength>lengthMax)) continue;
         if(remove(base,source.token)!==base) continue;
         generate(base,parts,candidate=>{
           if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;

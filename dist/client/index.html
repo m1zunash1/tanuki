@@ -11,7 +11,7 @@
 <body>
   <main class="shell">
     <header class="hero">
-      <div class="leaf-mark" aria-hidden="true"><i></i><i></i></div>
+      <div class="leaf-mark" aria-hidden="true"></div>
       <h1>交代たぬきツール</h1>
     </header>
 
@@ -25,9 +25,19 @@
 
       <fieldset class="mode-picker">
         <legend>消し方</legend>
-        <label><input type="radio" name="mode" value="sequence" checked /><span><b>文字列ごと</b><small>入力した並びをまとめて消す</small></span></label>
-        <label><input type="radio" name="mode" value="individual" /><span><b>個別消去</b><small>構成するひらがなをすべて消す</small></span></label>
+        <label><input type="radio" name="mode" value="sequence" checked /><span><b>文字列ごと</b></span></label>
+        <label><input type="radio" name="mode" value="individual" /><span><b>個別消去</b></span></label>
       </fieldset>
+
+      <div class="length-picker">
+        <span>文字列の長さ</span>
+        <div>
+          <input id="lengthMin" type="number" min="1" placeholder="自由" aria-label="文字列の最小の長さ" />
+          <i>〜</i>
+          <input id="lengthMax" type="number" min="1" placeholder="自由" aria-label="文字列の最大の長さ" />
+          <em>文字</em>
+        </div>
+      </div>
 
       <fieldset class="dictionary-picker">
         <legend>検索する辞書</legend>
