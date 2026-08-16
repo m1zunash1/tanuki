@@ -17,7 +17,16 @@
   }
   function combinations(n,k){ let r=1; for(let i=1;i<=Math.min(k,n-k);i+=1) r=(r*(n-i+1))/i; return r; }
   function factorial(n){ let r=1; for(let i=2;i<=n;i+=1) r*=i; return r; }
-  function isRepeatedWord(word){ const list=chars(word); if(list.length<2||list.length%2!==0)return false; const half=list.length/2; for(let i=0;i<half;i+=1)if(list[i]!==list[i+half])return false; return true; }
+  function isRepeatedWord(word){
+    const list=chars(word);
+    for(let unitLength=1;unitLength<=list.length/2;unitLength+=1){
+      if(list.length%unitLength!==0)continue;
+      let repeated=true;
+      for(let i=unitLength;i<list.length;i+=1){if(list[i]!==list[i%unitLength]){repeated=false;break;}}
+      if(repeated)return true;
+    }
+    return false;
+  }
   function insertSize(input,k,mode){ return mode==='sequence' ? chars(input.token).length*k : chars(input.token).length*k; }
   function estimate(input,wordCount,mode){
     let total=0;
@@ -61,7 +70,7 @@
           if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;
           const outputs=[];
           for(const input of inputs){ const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
-          if(config.omitRepeats&&isRepeatedWord(candidate))return;
+          if(config.omitRepeats&&(isRepeatedWord(candidate)||outputs.some(isRepeatedWord)))return;
           found.set(candidate,{candidate,outputs,length:chars(candidate).length});
         },budget);
         if(budget.used>=budget.max) break;

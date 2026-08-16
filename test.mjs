@@ -4,7 +4,7 @@ let r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],mod
 r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],lengthMin:'8',lengthMax:'',mode:'sequence',words});if(r.results.some(x=>x.candidate==='おおむかんしん'))throw new Error('length minimum failed');
 r=C.search({inputs:[{token:'け',min:2,max:2},{token:'ょうしつ',min:1,max:1}],mode:'sequence',words});if(!r.results.some(x=>x.candidate==='けいけんちょうしつ'))throw new Error('second example failed');
 if(C.individualCount('あいうえ','あいう')!==1||C.individualCount('あいえ','あいう')!==0)throw new Error('individual completeness failed');
-if(!C.isRepeatedWord('ぽかぽか')||C.isRepeatedWord('ぽかぽん'))throw new Error('repeat detection failed');
+if(!C.isRepeatedWord('ぽかぽか')||!C.isRepeatedWord('きょとんきょとん')||!C.isRepeatedWord('にこにこにこ')||C.isRepeatedWord('ぽかぽん'))throw new Error('repeat detection failed');
 const repeatWords=new Set(['かか','ぽぽ']);r=C.search({inputs:[{token:'ぽ',min:2,max:2},{token:'か',min:2,max:2}],omitRepeats:true,mode:'sequence',words:repeatWords});if(r.results.some(x=>x.candidate==='ぽかぽか'))throw new Error('repeat filtering failed');
 r=C.search({inputs:[{token:'あいう',min:1,max:1},{token:'あい',min:1,max:1}],mode:'individual',words});if(r.results.some(x=>!x.candidate.includes('う')))throw new Error('individual candidate omitted a required character');
 console.log('tanuki search tests passed');
