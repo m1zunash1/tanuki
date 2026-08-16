@@ -2,101 +2,67 @@
   'use strict';
   const SMALL = { ぁ:'あ',ぃ:'い',ぅ:'う',ぇ:'え',ぉ:'お',ゃ:'や',ゅ:'ゆ',ょ:'よ',ゎ:'わ' };
   const HIRAGANA = /^[ぁ-ゖー]+$/u;
-  const chars = (s) => Array.from(s);
+  const chars = value => Array.from(value);
 
-  function normalize(value) {
-    return String(value || '').normalize('NFKC').trim().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
-  }
-  function normalizeForIndividual(value) {
-    return chars(normalize(value)).map(c => SMALL[c] || c).join('');
-  }
+  function normalize(value) { return String(value || '').normalize('NFKC').trim().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)); }
+  function normalizeIndividual(value) { return chars(normalize(value)).map(c => SMALL[c] || c).join(''); }
   function deleteSequence(word, token) { return word.split(token).join(''); }
-  function deleteIndividual(word, token) {
-    const set = new Set(chars(normalizeForIndividual(token)));
-    return chars(normalizeForIndividual(word)).filter(c => !set.has(c)).join('');
+  function deleteIndividual(word, token) { const set=new Set(chars(normalizeIndividual(token))); return chars(normalizeIndividual(word)).filter(c=>!set.has(c)).join(''); }
+  function sequenceCount(word, token) { return word.split(token).length - 1; }
+  function frequencies(value) { const map=new Map(); for(const c of chars(value)) map.set(c,(map.get(c)||0)+1); return map; }
+  function individualCount(word, token) {
+    const have=frequencies(normalizeIndividual(word)); const need=frequencies(normalizeIndividual(token)); let units=null;
+    for(const [c,n] of need){ const count=have.get(c)||0; if(count===0 || count%n!==0) return 0; const ratio=count/n; if(units===null) units=ratio; else if(units!==ratio) return 0; }
+    return units||0;
   }
-  function combinations(n, k) {
-    let r = 1;
-    for (let i = 1; i <= Math.min(k, n - k); i += 1) r = (r * (n - i + 1)) / i;
-    return r;
+  function combinations(n,k){ let r=1; for(let i=1;i<=Math.min(k,n-k);i+=1) r=(r*(n-i+1))/i; return r; }
+  function factorial(n){ let r=1; for(let i=2;i<=n;i+=1) r*=i; return r; }
+  function insertSize(input,k,mode){ return mode==='sequence' ? chars(input.token).length*k : chars(input.token).length*k; }
+  function estimate(input,wordCount,mode){
+    let total=0;
+    for(let k=input.min;k<=input.max;k+=1){ const inserted=insertSize(input,k,mode); let variants=combinations(18+inserted,inserted); if(mode==='individual'){ const counts=frequencies(input.token); let permutations=factorial(inserted); for(const n of counts.values()) permutations/=factorial(n*k); variants*=permutations; } total+=variants; }
+    return total*wordCount;
   }
-  function estimate(wordsByLength, target, token, mode) {
-    const unit = mode === 'sequence' ? chars(token).length : 1;
-    let total = 0;
-    for (let k = 1; k * unit < target; k += 1) {
-      const n = target - k * unit;
-      const count = (wordsByLength.get(n) || []).length;
-      const variants = mode === 'individual' ? Math.pow(new Set(chars(token)).size, k) : 1;
-      total += count * combinations(n + k, k) * variants;
+  function generatedParts(input,k,mode){
+    if(mode==='sequence') return new Map([[input.token,k]]);
+    const map=frequencies(input.token); for(const [c,n] of map) map.set(c,n*k); return map;
+  }
+  function generate(base,parts,visit,budget){
+    const baseChars=chars(base); const keys=[...parts.keys()];
+    function walk(pos,out,remaining){
+      if(budget.used>=budget.max) return;
+      let left=0; for(const n of remaining.values()) left+=n;
+      if(pos===baseChars.length && left===0){ budget.used+=1; visit(out.join('')); return; }
+      if(pos<baseChars.length){ out.push(baseChars[pos]); walk(pos+1,out,remaining); out.pop(); }
+      for(const key of keys){ const n=remaining.get(key)||0; if(!n) continue; remaining.set(key,n-1); out.push(key); walk(pos,out,remaining); out.pop(); remaining.set(key,n); if(budget.used>=budget.max) break; }
     }
-    return total;
+    walk(0,[],new Map(parts));
   }
-
-  function generate(base, token, count, mode, visit, budget) {
-    const baseChars = chars(base);
-    const inserts = mode === 'sequence' ? [token] : [...new Set(chars(token))];
-    function walk(basePos, remaining, parts) {
-      if (budget.used >= budget.max) return;
-      if (basePos === baseChars.length && remaining === 0) {
-        budget.used += 1; visit(parts.join('')); return;
-      }
-      if (basePos < baseChars.length) {
-        parts.push(baseChars[basePos]); walk(basePos + 1, remaining, parts); parts.pop();
-      }
-      if (remaining > 0) {
-        for (const insert of inserts) {
-          parts.push(insert); walk(basePos, remaining - 1, parts); parts.pop();
-          if (budget.used >= budget.max) break;
-        }
-      }
-    }
-    walk(0, count, []);
-  }
-
-  function search(config) {
-    const mode = config.mode;
-    const a = mode === 'individual' ? normalizeForIndividual(config.a) : normalize(config.a);
-    const b = mode === 'individual' ? normalizeForIndividual(config.b) : normalize(config.b);
-    if (!a || !b || !HIRAGANA.test(a) || !HIRAGANA.test(b)) throw new Error('入力1・2には、ひらがなを入力してください。');
-    if (a === b) throw new Error('異なる2つの文字列を入力してください。');
-    const min = Number(config.min), max = Number(config.max);
-    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 2 || max > 24 || min > max) throw new Error('文字数は2〜24の範囲で正しく指定してください。');
-    const wordSet = config.words;
-    const byLength = new Map();
-    for (const word of wordSet) {
-      const normalized = mode === 'individual' ? normalizeForIndividual(word) : normalize(word);
-      if (!HIRAGANA.test(normalized)) continue;
-      const len = chars(normalized).length;
-      if (!byLength.has(len)) byLength.set(len, []);
-      byLength.get(len).push(normalized);
-    }
-    const remove = mode === 'sequence' ? deleteSequence : deleteIndividual;
-    const found = new Map();
-    const budget = { used: 0, max: 1500000 };
-    for (let target = min; target <= max && budget.used < budget.max; target += 1) {
-      const sides = [
-        { token:a, other:b, flip:false, cost:estimate(byLength,target,a,mode) },
-        { token:b, other:a, flip:true, cost:estimate(byLength,target,b,mode) },
-      ].sort((x,y) => x.cost-y.cost);
-      const side = sides[0];
-      const unit = mode === 'sequence' ? chars(side.token).length : 1;
-      for (let k = 1; k * unit < target && budget.used < budget.max; k += 1) {
-        const baseLength = target - k * unit;
-        for (const base of byLength.get(baseLength) || []) {
-          if (remove(base, side.token) !== base) continue;
-          generate(base, side.token, k, mode, candidate => {
-            if (chars(candidate).length !== target || remove(candidate, side.token) !== base) return;
-            const otherWord = remove(candidate, side.other);
-            if (!otherWord || !wordSet.has(otherWord)) return;
-            const word1 = side.flip ? otherWord : base;
-            const word2 = side.flip ? base : otherWord;
-            found.set(candidate, { candidate, word1, word2, length:target });
-          }, budget);
-          if (budget.used >= budget.max) break;
-        }
+  function search(config){
+    const mode=config.mode;
+    if(!Array.isArray(config.inputs)||config.inputs.length<2||config.inputs.length>4) throw new Error('消す文字列は2〜4個にしてください。');
+    const inputs=config.inputs.map((raw,index)=>{ const token=mode==='individual'?normalizeIndividual(raw.token):normalize(raw.token); const min=Number(raw.min),max=Number(raw.max); if(!token||!HIRAGANA.test(token)) throw new Error(`文字列${index+1}には、ひらがなを入力してください。`); if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max>6||min>max) throw new Error(`文字列${index+1}の含有数は1〜6で指定してください。`); return {token,min,max,index}; });
+    if(new Set(inputs.map(x=>x.token)).size!==inputs.length) throw new Error('同じ消去文字列は複数指定できません。');
+    const words=new Set(); for(const word of config.words){ const w=mode==='individual'?normalizeIndividual(word):normalize(word); if(HIRAGANA.test(w)) words.add(w); }
+    const remove=mode==='sequence'?deleteSequence:deleteIndividual; const count=mode==='sequence'?sequenceCount:individualCount;
+    const source=[...inputs].sort((a,b)=>estimate(a,words.size,mode)-estimate(b,words.size,mode))[0];
+    const bases=[...words].sort((a,b)=>chars(a).length-chars(b).length||a.localeCompare(b,'ja'));
+    const found=new Map(); const budget={used:0,max:1500000};
+    for(let k=source.min;k<=source.max&&budget.used<budget.max;k+=1){
+      const parts=generatedParts(source,k,mode);
+      for(const base of bases){
+        if(chars(base).length+insertSize(source,k,mode)>24) continue;
+        if(remove(base,source.token)!==base) continue;
+        generate(base,parts,candidate=>{
+          if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;
+          const outputs=[];
+          for(const input of inputs){ const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
+          found.set(candidate,{candidate,outputs,length:chars(candidate).length});
+        },budget);
+        if(budget.used>=budget.max) break;
       }
     }
-    return { results:[...found.values()].sort((x,y) => x.length-y.length || x.candidate.localeCompare(y.candidate,'ja')), truncated:budget.used>=budget.max, checked:budget.used };
+    return {results:[...found.values()].sort((a,b)=>a.length-b.length||a.candidate.localeCompare(b.candidate,'ja')),truncated:budget.used>=budget.max,checked:budget.used};
   }
-  scope.TanukiCore = { normalize, normalizeForIndividual, deleteSequence, deleteIndividual, search };
-})(typeof window !== 'undefined' ? window : globalThis);
+  scope.TanukiCore={normalize,normalizeIndividual,deleteSequence,deleteIndividual,sequenceCount,individualCount,search};
+})(typeof window!=='undefined'?window:globalThis);
