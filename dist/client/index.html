@@ -2,76 +2,74 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#173f35" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>交代たぬきツール</title>
-  <meta name="description" content="複数の文字列を消すと、それぞれ辞書語になる文字列を探します。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;700;800&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <div class="leaf-mark" aria-hidden="true"></div>
-      <h1>交代たぬきツール</h1>
-    </header>
+  <main class="container">
+    <header class="hero"><h1>交代たぬきツール</h1></header>
 
-    <section class="search-card" aria-labelledby="search-title">
-      <div class="section-heading">
-        <h2 id="search-title">消す文字列</h2>
-        <button id="addInput" class="add-button" type="button">＋ 文字列を増やす</button>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>入力</h2>
+        <button id="addInput" class="add-input" type="button">＋ 文字列を追加</button>
       </div>
-
       <div id="inputList" class="input-list"></div>
-
-      <fieldset class="mode-picker">
-        <legend>消し方</legend>
-        <label><input type="radio" name="mode" value="sequence" checked /><span><b>文字列ごと</b></span></label>
-        <label><input type="radio" name="mode" value="individual" /><span><b>個別消去</b></span></label>
-      </fieldset>
-
-      <div class="length-picker">
-        <span>文字列の長さ</span>
-        <div>
-          <input id="lengthMin" type="number" min="1" placeholder="自由" aria-label="文字列の最小の長さ" />
-          <i>〜</i>
-          <input id="lengthMax" type="number" min="1" placeholder="自由" aria-label="文字列の最大の長さ" />
-          <em>文字</em>
-        </div>
-      </div>
-
-      <fieldset class="dictionary-picker">
-        <legend>検索する辞書</legend>
-        <label><input type="checkbox" name="dictionary" value="kobuta" checked /><span>仔豚辞書</span></label>
-        <label><input type="checkbox" name="dictionary" value="general" checked /><span>一般語辞書</span></label>
-        <label><input type="checkbox" name="dictionary" value="item" checked /><span>イラスト辞書</span></label>
-      </fieldset>
-
-      <div id="error" class="error" role="alert"></div>
-      <button id="searchButton" class="search-button" type="button"><span>候補を探す</span><i aria-hidden="true">→</i></button>
     </section>
 
-    <section class="results-section" aria-labelledby="results-title">
-      <div class="section-heading results-heading">
-        <h2 id="results-title">見つかった組み合わせ</h2>
-        <span id="summary" class="summary">まだ検索していません</span>
+    <section class="panel">
+      <h2>検索設定</h2>
+      <div class="settings-grid">
+        <fieldset class="setting-field">
+          <legend>消し方</legend>
+          <div class="segmented">
+            <label><input type="radio" name="mode" value="sequence" checked /><span>文字列ごと</span></label>
+            <label><input type="radio" name="mode" value="individual" /><span>個別消去</span></label>
+          </div>
+        </fieldset>
+        <div class="length-field setting-box">
+          <span>文字列の長さ</span>
+          <div><input id="lengthMin" type="number" min="1" placeholder="自由" aria-label="文字列の最小の長さ" /><i>〜</i><input id="lengthMax" type="number" min="1" placeholder="自由" aria-label="文字列の最大の長さ" /></div>
+        </div>
+        <label class="check-field setting-box"><input id="omitRepeats" type="checkbox" /><span>繰り返し語を省く</span></label>
+        <button id="searchButton" class="search" type="button">検索</button>
       </div>
-      <div id="results" class="results" aria-live="polite">
-        <div class="empty-state"><span class="empty-leaf"></span><p>条件を入力して検索してください。</p></div>
-      </div>
+      <div id="error" class="error-box" role="alert"></div>
+    </section>
+
+    <section class="panel">
+      <h2>辞書選択</h2>
+      <fieldset>
+        <legend>検索対象の辞書（複数選択可）</legend>
+        <div class="dict-groups"><div class="dict-group"><h3>日本語辞書</h3><div class="dict-grid">
+          <label><input type="checkbox" name="dictionary" value="kobuta" checked /> 仔豚辞書</label>
+          <label><input type="checkbox" name="dictionary" value="general" checked /> 一般語辞書</label>
+          <label><input type="checkbox" name="dictionary" value="item" checked /> イラスト辞書</label>
+        </div></div></div>
+      </fieldset>
+    </section>
+
+    <section class="panel">
+      <div class="results-header"><h2>結果</h2></div>
+      <div class="summary-row"><div id="summary" class="summary-badge">まだ検索していません</div></div>
+      <div id="results" aria-live="polite"><div class="empty">条件を入力して検索してください。</div></div>
       <button id="moreButton" class="more-button" type="button" hidden>さらに表示</button>
     </section>
-    <footer>交代たぬきツール</footer>
   </main>
 
   <template id="inputTemplate">
-    <div class="input-row">
-      <label class="token-field"><span class="token-label"></span><input class="token-input" inputmode="text" autocomplete="off" spellcheck="false" maxlength="12" /></label>
-      <div class="count-field"><span>含める数</span><div><input class="count-min" type="number" min="1" max="6" value="1" aria-label="最小含有数" /><i>〜</i><input class="count-max" type="number" min="1" max="6" value="3" aria-label="最大含有数" /><em>個</em></div></div>
-      <button class="remove-input" type="button" aria-label="この文字列を減らす">×</button>
-    </div>
+    <article class="input-card">
+      <div class="input-head"><span class="token-label"></span><button class="remove-input" type="button" aria-label="この文字列を削除"><span>×</span></button></div>
+      <div class="input-body">
+        <input class="token-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="12" placeholder="ひらがなを入力" />
+        <label class="count-field"><span>含める数</span><span><input class="count-min" type="number" min="1" max="6" value="1" aria-label="最小含有数" /><i>〜</i><input class="count-max" type="number" min="1" max="6" value="3" aria-label="最大含有数" /></span></label>
+      </div>
+    </article>
   </template>
-  <script src="dict-data.js"></script>
-  <script src="search-core.js"></script>
-  <script src="app.js"></script>
+  <script src="dict-data.js"></script><script src="search-core.js"></script><script src="app.js"></script>
 </body>
 </html>

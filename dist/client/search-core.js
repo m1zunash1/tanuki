@@ -17,6 +17,7 @@
   }
   function combinations(n,k){ let r=1; for(let i=1;i<=Math.min(k,n-k);i+=1) r=(r*(n-i+1))/i; return r; }
   function factorial(n){ let r=1; for(let i=2;i<=n;i+=1) r*=i; return r; }
+  function isRepeatedWord(word){ const list=chars(word); if(list.length<2||list.length%2!==0)return false; const half=list.length/2; for(let i=0;i<half;i+=1)if(list[i]!==list[i+half])return false; return true; }
   function insertSize(input,k,mode){ return mode==='sequence' ? chars(input.token).length*k : chars(input.token).length*k; }
   function estimate(input,wordCount,mode){
     let total=0;
@@ -60,6 +61,7 @@
           if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;
           const outputs=[];
           for(const input of inputs){ const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
+          if(config.omitRepeats&&isRepeatedWord(candidate))return;
           found.set(candidate,{candidate,outputs,length:chars(candidate).length});
         },budget);
         if(budget.used>=budget.max) break;
@@ -67,5 +69,5 @@
     }
     return {results:[...found.values()].sort((a,b)=>a.length-b.length||a.candidate.localeCompare(b.candidate,'ja')),truncated:budget.used>=budget.max,checked:budget.used};
   }
-  scope.TanukiCore={normalize,normalizeIndividual,deleteSequence,deleteIndividual,sequenceCount,individualCount,search};
+  scope.TanukiCore={normalize,normalizeIndividual,deleteSequence,deleteIndividual,sequenceCount,individualCount,isRepeatedWord,search};
 })(typeof window!=='undefined'?window:globalThis);
