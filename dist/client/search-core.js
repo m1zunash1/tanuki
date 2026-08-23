@@ -51,13 +51,15 @@
   function search(config){
     const mode=config.mode;
     if(!Array.isArray(config.inputs)||config.inputs.length<2||config.inputs.length>4) throw new Error('消す文字列は2〜4個にしてください。');
-    const inputs=config.inputs.map((raw,index)=>{ const token=mode==='individual'?normalizeIndividual(raw.token):normalize(raw.token); const min=Number(raw.min),max=Number(raw.max); if(!token||!HIRAGANA.test(token)) throw new Error(`文字列${index+1}には、ひらがなを入力してください。`); if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max>6||min>max) throw new Error(`文字列${index+1}の含有数は1〜6で指定してください。`); return {token,min,max,index}; });
-    if(new Set(inputs.map(x=>x.token)).size!==inputs.length) throw new Error('同じ消去文字列は複数指定できません。');
+    const inputs=config.inputs.map((raw,index)=>{ const token=mode==='individual'?normalizeIndividual(raw.token):normalize(raw.token); if(!token)return {token:'',min:0,max:0,index,identity:true}; const min=Number(raw.min),max=Number(raw.max); if(!HIRAGANA.test(token)) throw new Error(`文字列${index+1}には、ひらがなを入力してください。`); if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max>6||min>max) throw new Error(`文字列${index+1}の含有数は1〜6で指定してください。`); return {token,min,max,index,identity:false}; });
+    const activeInputs=inputs.filter(input=>!input.identity);
+    if(activeInputs.length===0) throw new Error('消す対象を1つ以上入力してください。');
+    if(new Set(activeInputs.map(x=>x.token)).size!==activeInputs.length) throw new Error('同じ消去文字列は複数指定できません。');
     const lengthMin=config.lengthMin===''||config.lengthMin==null?null:Number(config.lengthMin); const lengthMax=config.lengthMax===''||config.lengthMax==null?null:Number(config.lengthMax);
     if((lengthMin!==null&&(!Number.isInteger(lengthMin)||lengthMin<1))||(lengthMax!==null&&(!Number.isInteger(lengthMax)||lengthMax<1))||(lengthMin!==null&&lengthMax!==null&&lengthMin>lengthMax)) throw new Error('文字列の長さを正しく指定してください。');
     const words=new Set(); for(const word of config.words){ const w=mode==='individual'?normalizeIndividual(word):normalize(word); if(HIRAGANA.test(w)) words.add(w); }
     const remove=mode==='sequence'?deleteSequence:deleteIndividual; const count=mode==='sequence'?sequenceCount:individualCount;
-    const source=[...inputs].sort((a,b)=>estimate(a,words.size,mode)-estimate(b,words.size,mode))[0];
+    const source=[...activeInputs].sort((a,b)=>estimate(a,words.size,mode)-estimate(b,words.size,mode))[0];
     const bases=[...words].sort((a,b)=>chars(a).length-chars(b).length||a.localeCompare(b,'ja'));
     const found=new Map(); const budget={used:0,max:1500000};
     for(let k=source.min;k<=source.max&&budget.used<budget.max;k+=1){
@@ -69,7 +71,7 @@
         generate(base,parts,candidate=>{
           if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;
           const outputs=[];
-          for(const input of inputs){ const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
+          for(const input of inputs){ if(input.identity){if(!words.has(candidate))return;outputs[input.index]=candidate;continue;} const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
           if(config.omitRepeats&&(isRepeatedWord(candidate)||outputs.some(isRepeatedWord)))return;
           found.set(candidate,{candidate,outputs,length:chars(candidate).length});
         },budget);
