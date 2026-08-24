@@ -3,6 +3,8 @@ const words=new Set(['むかんしん','おおむかし','いんちょうしつ'
 let r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],mode:'sequence',words});if(!r.results.some(x=>x.candidate==='おおむかんしん'))throw new Error('sequence example failed');
 r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],lengthMin:'8',lengthMax:'',mode:'sequence',words});if(r.results.some(x=>x.candidate==='おおむかんしん'))throw new Error('length minimum failed');
 r=C.search({inputs:[{token:'け',min:2,max:2},{token:'ょうしつ',min:1,max:1}],mode:'sequence',words});if(!r.results.some(x=>x.candidate==='けいけんちょうしつ'))throw new Error('second example failed');
+r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],candidateWords:new Set(['別の語']),mode:'sequence',words});if(r.results.some(x=>x.candidate==='おおむかんしん'))throw new Error('candidate dictionary exclusion failed');
+r=C.search({inputs:[{token:'お',min:2,max:3},{token:'ん',min:2,max:3}],candidateWords:new Set(['おおむかんしん']),mode:'sequence',words});if(!r.results.some(x=>x.candidate==='おおむかんしん'))throw new Error('candidate dictionary inclusion failed');
 r=C.search({inputs:[{token:'こ',min:3,max:3},{token:'',min:1,max:3}],mode:'sequence',words});const identity=r.results.find(x=>x.candidate==='ここかしこ');if(!identity||identity.outputs[0]!=='かし'||identity.outputs[1]!=='ここかしこ')throw new Error('empty target identity failed');
 if(C.individualCount('あいうえ','あいう')!==1||C.individualCount('あいえ','あいう')!==0)throw new Error('individual completeness failed');
 if(!C.isRepeatedWord('ぽかぽか')||!C.isRepeatedWord('きょとんきょとん')||!C.isRepeatedWord('にこにこにこ')||C.isRepeatedWord('ぽかぽん'))throw new Error('repeat detection failed');

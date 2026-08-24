@@ -58,6 +58,7 @@
     const lengthMin=config.lengthMin===''||config.lengthMin==null?null:Number(config.lengthMin); const lengthMax=config.lengthMax===''||config.lengthMax==null?null:Number(config.lengthMax);
     if((lengthMin!==null&&(!Number.isInteger(lengthMin)||lengthMin<1))||(lengthMax!==null&&(!Number.isInteger(lengthMax)||lengthMax<1))||(lengthMin!==null&&lengthMax!==null&&lengthMin>lengthMax)) throw new Error('文字列の長さを正しく指定してください。');
     const words=new Set(); for(const word of config.words){ const w=mode==='individual'?normalizeIndividual(word):normalize(word); if(HIRAGANA.test(w)) words.add(w); }
+    let candidateWords=null; if(config.candidateWords){candidateWords=new Set();for(const word of config.candidateWords){const w=mode==='individual'?normalizeIndividual(word):normalize(word);if(HIRAGANA.test(w))candidateWords.add(w);}}
     const remove=mode==='sequence'?deleteSequence:deleteIndividual; const count=mode==='sequence'?sequenceCount:individualCount;
     const source=[...activeInputs].sort((a,b)=>estimate(a,words.size,mode)-estimate(b,words.size,mode))[0];
     const bases=[...words].sort((a,b)=>chars(a).length-chars(b).length||a.localeCompare(b,'ja'));
@@ -70,6 +71,7 @@
         if(remove(base,source.token)!==base) continue;
         generate(base,parts,candidate=>{
           if(remove(candidate,source.token)!==base || count(candidate,source.token)!==k) return;
+          if(candidateWords&&!candidateWords.has(candidate))return;
           const outputs=[];
           for(const input of inputs){ if(input.identity){if(!words.has(candidate))return;outputs[input.index]=candidate;continue;} const amount=count(candidate,input.token); if(amount<input.min||amount>input.max) return; const output=remove(candidate,input.token); if(!output||!words.has(output)) return; outputs[input.index]=output; }
           if(config.omitRepeats&&(isRepeatedWord(candidate)||outputs.some(isRepeatedWord)))return;

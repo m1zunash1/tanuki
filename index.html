@@ -41,12 +41,20 @@
 
     <section class="panel">
       <h2>辞書選択</h2>
-      <fieldset>
-        <legend>検索対象の辞書（複数選択可）</legend>
+      <fieldset class="dictionary-field">
+        <legend>削除後の単語（複数選択可）</legend>
         <div class="dict-groups"><div class="dict-group"><h3>日本語辞書</h3><div class="dict-grid">
           <label><input type="checkbox" name="dictionary" value="kobuta" checked /> 仔豚辞書</label>
           <label><input type="checkbox" name="dictionary" value="general" checked /> 一般語辞書</label>
           <label><input type="checkbox" name="dictionary" value="item" checked /> イラスト辞書</label>
+        </div></div></div>
+      </fieldset>
+      <fieldset class="dictionary-field">
+        <legend>候補文字列（未選択なら制限なし）</legend>
+        <div class="dict-groups"><div class="dict-group"><h3>日本語辞書</h3><div class="dict-grid">
+          <label><input type="checkbox" name="candidateDictionary" value="kobuta" /> 仔豚辞書</label>
+          <label><input type="checkbox" name="candidateDictionary" value="general" /> 一般語辞書</label>
+          <label><input type="checkbox" name="candidateDictionary" value="item" /> イラスト辞書</label>
         </div></div></div>
       </fieldset>
       <div class="search-row"><button id="searchButton" class="search" type="button">検索</button></div>
